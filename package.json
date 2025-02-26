@@ -1,0 +1,22 @@
+{
+  "name": "cute-nestjs",
+  "private": true,
+  "version": "0.0.1",
+  "description": "一个轻量级的类 NestJS 框架实现，专注于实现NestJS的核心特性，便于学习、理解NestJS的设计理念和实现原理。",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "keywords": [
+    "nestjs",
+    "midway"
+  ],
+  "author": "drfu",
+  "license": "MIT",
+  "devDependencies": {
+    "turbo": "latest"
+  },
+  "packageManager": "pnpm@8.9.0"
+}

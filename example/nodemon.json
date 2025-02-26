@@ -1,0 +1,9 @@
+{
+  "watch": [
+    "src",
+    "../packages/core/dist"
+  ],
+  "ext": ".ts,.js",
+  "ignore": [],
+  "exec": "ts-node ./src/main.ts"
+} 
