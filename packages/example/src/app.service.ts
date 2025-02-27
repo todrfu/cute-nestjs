@@ -8,24 +8,22 @@ import type {
 
 @Injectable()
 export class AppService implements OnModuleInit, OnApplicationBootstrap, OnModuleDestroy, BeforeApplicationShutdown {
-  constructor() {
-    console.log('🦞lifecycle: AppService constructor')
-  }
+  constructor() {}
 
   async onModuleInit() {
-    console.log('🦞lifecycle: Module initialized')
+    console.log('🦞生命周期: onModuleInit')
   }
 
   async onApplicationBootstrap() {
-    console.log('🦞lifecycle: Application bootstrapped')
+    console.log('🦞生命周期: onApplicationBootstrap')
   }
 
   async beforeApplicationShutdown() {
-    console.log('🦞lifecycle: Application preparing to shutdown')
+    console.log('🦞生命周期: beforeApplicationShutdown')
   }
 
   async onModuleDestroy() {
-    console.log('🦞lifecycle: Module being destroyed')
+    console.log('🦞生命周期: onModuleDestroy')
   }
 
   getHello(): string {
