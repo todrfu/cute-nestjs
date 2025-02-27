@@ -137,3 +137,4 @@ dist
 pnpm-lock.yaml
 .rollup.cache
 .turbo
+.DS_Store
