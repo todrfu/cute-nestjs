@@ -51,6 +51,9 @@ export class CuteNestFactory {
           throw new Error(`${importedModule.name}模块不是一个合法模块！`)
         }
 
+        // 注册入口模块到容器中
+        container.register(importedModule, importedModule)
+
         const importedMetadata = getMetadata(MODULE_METADATA_DECORATOR_KEY, importedModule) || {}
 
         // 如果是全局模块，就添加到全局模块集合中
