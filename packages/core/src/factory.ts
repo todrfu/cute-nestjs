@@ -1,12 +1,14 @@
 import 'reflect-metadata'
-import Koa from 'koa'
-import Router from 'koa-router'
-import { bootstrap } from './utils/bootstrap'
-import { hasMetadata, getMetadata } from './utils/metadata'
-import { Container } from './core/container'
-import { ModuleRef } from './core/module-ref'
-import { MODULE_METADATA_DECORATOR_KEY } from '@/utils/const'
-import type { Constructor } from './interfaces/common'
+import { Container } from '@/core/container'
+import { ModuleRef } from '@/core/module-ref'
+import { MiddlewareBuilder } from '@/core/middleware-builder'
+import { KoaAdapter } from '@/adapters/koa-adapter'
+import { bootstrap } from '@/utils/bootstrap'
+import { hasMetadata, getMetadata } from '@/utils/metadata'
+import { INJECTABLE_DECORATOR_KEY, MODULE_METADATA_DECORATOR_KEY } from '@/utils/const'
+import type { Constructor } from '@/interfaces/common'
+import type { CuteNestModule } from '@/interfaces/middleware-consumer'
+import type { HttpAdapter, ApplicationOptions } from '@/interfaces/http-adapter'
 
 /**
  * 核心工厂类，负责创建和初始化应用实例
@@ -23,37 +25,30 @@ export class CuteNestFactory {
   /**
    * 创建应用实例
    * @param rootModule 根模块类
-   * @returns Koa 应用实例
+   * @param options 应用选项
+   * @returns HTTP适配器实例
    */
-  static async create(rootModule: Constructor): Promise<Koa> {
+  static async create(rootModule: Constructor, options: ApplicationOptions = {}): Promise<HttpAdapter> {
     try {
-      const app = new Koa()
-      const router = new Router()
+      // 创建HTTP适配器
+      const httpAdapter = options.httpAdapter ? new options.httpAdapter() : new KoaAdapter()
       const container = new Container()
       this.container = container
       const moduleRef = new ModuleRef(container)
 
       // 验证根模块是否有效
       if (!hasMetadata(MODULE_METADATA_DECORATOR_KEY, rootModule)) {
-        throw new Error(
-          `${rootModule.name} 不是一个合法模块，该模块是否使用了 @Module() ?`
-        )
+        throw new Error(`${rootModule.name} 不是一个合法模块，该模块是否使用了 @Module() ?`)
       }
 
       // 获取根模块的元数据
       const metadata = getMetadata(MODULE_METADATA_DECORATOR_KEY, rootModule) || {}
-      const {
-        controllers = [],
-        providers = [],
-        imports = []
-      } = metadata
+      const { controllers = [], providers = [], imports = [] } = metadata
 
       // 处理导入的模块
       for (const importedModule of imports) {
         if (!hasMetadata(MODULE_METADATA_DECORATOR_KEY, importedModule)) {
-          throw new Error(
-            `${importedModule.name}模块不是一个合法模块！`
-          )
+          throw new Error(`${importedModule.name}模块不是一个合法模块！`)
         }
 
         const importedMetadata = getMetadata(MODULE_METADATA_DECORATOR_KEY, importedModule) || {}
@@ -71,7 +66,7 @@ export class CuteNestFactory {
       // 处理全局模块的provider
       for (const globalModule of this.globalModules) {
         const { providers: globalProviders = [] } = getMetadata(MODULE_METADATA_DECORATOR_KEY, globalModule) || {}
-        globalProviders.forEach(provider => {
+        globalProviders.forEach((provider) => {
           if (!providers.includes(provider)) {
             providers.push(provider)
           }
@@ -80,24 +75,38 @@ export class CuteNestFactory {
 
       this.providers = providers
 
-      // 注册provider到容器中
+      // 注册根模块到容器中
+      container.register(rootModule, rootModule)
+
+      // 注册所有控制器到容器中（不需要 @Injectable 装饰器）
+      controllers.forEach(controller => {
+        container.register(controller, controller)
+      })
+
+      // 注册所有Provider到容器中（需要 @Injectable 装饰器）
       providers.forEach(provider => {
-        container.register(provider, provider)
+        if (hasMetadata(INJECTABLE_DECORATOR_KEY, provider)) {
+          container.register(provider, provider)
+        } else {
+          console.warn(`警告: Provider ${provider.name} 没有使用 @Injectable() 装饰器`)
+        }
       })
 
       // 调用模块初始化钩子
       await this.callModuleInit(providers, container)
 
-      bootstrap(app, router, {
+      // 处理模块中间件
+      await this.setupModuleMiddlewares(rootModule, httpAdapter, container)
+
+      // 初始化应用
+      await bootstrap(httpAdapter, {
         controllers,
         providers,
-        container
+        container,
       })
 
-      app.use(router.routes())
-      app.use(router.allowedMethods())
-
       // 将模块引用添加到上下文中
+      const app = httpAdapter.getInstance()
       app.context.moduleRef = moduleRef
 
       // 调用应用程序启动钩子
@@ -106,13 +115,46 @@ export class CuteNestFactory {
       // 设置进程退出时的处理函数
       this.setupCleanup()
 
-      return app
+      return httpAdapter
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new Error(`应用初始化失败: ${error.message}`)
       }
       throw new Error('应用初始化失败: 不明错误')
     }
+  }
+
+  /**
+   * 设置模块中间件
+   */
+  private static async setupModuleMiddlewares(
+    module: Constructor,
+    httpAdapter: HttpAdapter,
+    container: Container
+  ): Promise<void> {
+    const moduleInstance = await container.resolve(module)
+
+    // 检查模块是否实现了 CuteNestModule 接口
+    if (this.isCuteNestModule(moduleInstance)) {
+      const builder = new MiddlewareBuilder(httpAdapter)
+      await moduleInstance.configure(builder)
+      await builder.build()
+    }
+
+    // 递归处理导入的模块
+    const metadata = getMetadata(MODULE_METADATA_DECORATOR_KEY, module) || {}
+    const imports = metadata.imports || []
+
+    for (const importedModule of imports) {
+      await this.setupModuleMiddlewares(importedModule, httpAdapter, container)
+    }
+  }
+
+  /**
+   * 检查是否是 CuteNestModule
+   */
+  private static isCuteNestModule(value: any): value is CuteNestModule {
+    return value && typeof value.configure === 'function'
   }
 
   /**
@@ -174,9 +216,9 @@ export class CuteNestFactory {
     const cleanup = async () => {
       try {
         await this.callBeforeShutdown()
-        
+
         await this.callModuleDestroy()
-        
+
         console.log('应用已关闭')
         process.exit(0)
       } catch (error) {
@@ -194,6 +236,11 @@ export class CuteNestFactory {
    * 检查实例是否实现了指定的生命周期钩子
    */
   private static hasLifecycleHook(instance: any, hook: string): boolean {
-    return instance && typeof instance[hook] === 'function'
+    return (
+      instance &&
+      typeof instance[hook] === 'function' &&
+      // 检查方法是否在实例或其原型链上
+      instance[hook] !== Object.prototype[hook]
+    )
   }
-} 
+}

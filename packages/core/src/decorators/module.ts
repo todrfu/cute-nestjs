@@ -1,6 +1,6 @@
 import { hasMetadata, defineMetadata } from '@/utils/metadata'
-import { INJECTABLE_DECORATOR_KEY, MODULE_METADATA_DECORATOR_KEY } from '@/utils/const'
-import type { Constructor } from '@/interfaces'
+import { CONTROLLER_DECORATOR_KEY, INJECTABLE_DECORATOR_KEY, MODULE_METADATA_DECORATOR_KEY } from '@/utils/const'
+import type { Constructor } from '@/interfaces/common'
 
 export interface ModuleMetadata {
   imports?: Constructor[]
@@ -27,9 +27,9 @@ export function Module(metadata: ModuleMetadata): ClassDecorator {
 
     // 验证 controllers
     metadata.controllers?.forEach(controller => {
-      if (!hasMetadata(INJECTABLE_DECORATOR_KEY, controller)) {
+      if (!hasMetadata(CONTROLLER_DECORATOR_KEY, controller)) {
         throw new Error(
-          `Controller ${controller.name} 必须使用 @Injectable() 装饰`
+          `Controller ${controller.name} 必须使用 @Controller() 装饰`
         )
       }
     })

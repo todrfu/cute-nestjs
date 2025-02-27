@@ -1,4 +1,5 @@
 import Router from 'koa-router'
+import { RequestLifecycle } from '@/core/request-lifecycle'
 import { getMetadata } from './metadata'
 import { createInstance } from './createInstance'
 import { createParamDecorator } from './createParamDecorator'
@@ -18,7 +19,7 @@ import {
 } from './const'
 
 import type { Context } from 'koa'
-import type { Constructor } from '@/interfaces'
+import type { Constructor } from '@/interfaces/common'
 
 // 存储已注册的Provider类名
 const providerClsList: string[] = []
@@ -46,8 +47,17 @@ const PARAM_HANDLERS = {
  * @param router 路由实例
  * @param cls 控制器类
  * @param container 容器实例
+ * @param providers 提供者列表
  */
-export function createRoutes(router: Router, cls: Constructor, container: any) {
+export function createRoutes(
+  router: Router, 
+  cls: Constructor, 
+  container: any,
+  providers: Constructor[] = []
+) {
+  // 创建请求生命周期管理器
+  const lifecycle = new RequestLifecycle(container)
+
   // 处理Provider装饰器
   const providerName = getMetadata(PROVIDER_DECORATOR_KEY, cls)
   if (providerName) providerClsList.push(providerName)
@@ -56,73 +66,91 @@ export function createRoutes(router: Router, cls: Constructor, container: any) {
   const controllerPath = getMetadata(CONTROLLER_DECORATOR_KEY, cls) || ''
 
   // 遍历所有 HTTP 方法装饰器，创建路由
-  METHOD_DECORATORS.map(decorator => getMetadata(decorator, cls.prototype) || [])
-    .flat()
-    .forEach(({ path, method, funcName }) => {
+  const routes = METHOD_DECORATORS.map(decorator => getMetadata(decorator, cls.prototype) || []).flat()
+  routes.forEach(({ path, method, funcName }) => {
       // 组合完整路径
-      const fullPath = `${controllerPath}${path === '/' ? '' : path}`
+      const fullPath = `${controllerPath.path}${path === '/' ? '' : path}`
 
       if (!fullPath) return;
 
       // 创建路由处理函数
       router[method](fullPath, async (ctx: Context) => {
-        // 在处理路由时获取上下文ID
-        const contextId = ctx.state[REQUEST_CONTEXT_ID]
+        try {
+          // 执行请求前置处理
+          await lifecycle.beforeRequest(ctx, providers)
 
-        // 创建控制器实例
-        const instance = createInstance(cls, container, contextId)
+          // 在处理路由时获取上下文ID
+          const contextId = ctx.state[REQUEST_CONTEXT_ID]
 
-        // 获取方法参数类型
-        const paramTypes = getMetadata(DESIGN_PARAMTYPES_KEY, cls.prototype, funcName) || []
+          // 创建控制器实例
+          const instance = createInstance(cls, container, contextId)
 
-        // 获取各种参数装饰器的元数据
-        const paramDecorators = METHOD_DECORATORS.map(decorator =>
-          getMetadata(decorator, cls.prototype, funcName) || []
-        ).flat()
+          // 获取方法参数类型
+          const paramTypes = getMetadata(DESIGN_PARAMTYPES_KEY, cls.prototype, funcName) || []
 
-        const queryDecorators = getMetadata(QUERY_DECORATOR_KEY, cls.prototype, funcName) || []
-        const bodyDecorators = getMetadata(BODY_DECORATOR_KEY, cls.prototype, funcName) || []
+          // 获取各种参数装饰器的元数据
+          const paramDecorators = METHOD_DECORATORS.map(decorator =>
+            getMetadata(decorator, cls.prototype, funcName) || []
+          ).flat()
 
-        // 处理方法参数
-        const args = paramTypes.map((paramType, index) => {
-          if (paramDecorators[index]) {
-            return PARAM_HANDLERS[PARAM_DECORATOR_KEY]({
-              ctx,
-              paramType,
-              index,
-              keys: paramDecorators,
-              type: 'param',
-              contextId
-            })
-          }
+          const queryDecorators = getMetadata(QUERY_DECORATOR_KEY, cls.prototype, funcName) || []
+          const bodyDecorators = getMetadata(BODY_DECORATOR_KEY, cls.prototype, funcName) || []
 
-          if (queryDecorators[index]) {
-            return PARAM_HANDLERS[QUERY_DECORATOR_KEY]({
-              ctx,
-              paramType,
-              index,
-              keys: queryDecorators,
-              type: 'query',
-              contextId
-            })
-          }
+          // 处理方法参数
+          const args = paramTypes.map((paramType, index) => {
+            if (paramDecorators[index]) {
+              return PARAM_HANDLERS[PARAM_DECORATOR_KEY]({
+                ctx,
+                paramType,
+                index,
+                keys: paramDecorators,
+                type: 'param',
+                contextId
+              })
+            }
 
-          if (bodyDecorators[index]) {
-            return PARAM_HANDLERS[BODY_DECORATOR_KEY]({
-              ctx,
-              paramType,
-              index,
-              keys: bodyDecorators,
-              type: 'body',
-              contextId
-            })
-          }
+            if (queryDecorators[index]) {
+              return PARAM_HANDLERS[QUERY_DECORATOR_KEY]({
+                ctx,
+                paramType,
+                index,
+                keys: queryDecorators,
+                type: 'query',
+                contextId
+              })
+            }
 
-          return null
-        })
+            if (bodyDecorators[index]) {
+              return PARAM_HANDLERS[BODY_DECORATOR_KEY]({
+                ctx,
+                paramType,
+                index,
+                keys: bodyDecorators,
+                type: 'body',
+                contextId
+              })
+            }
 
-        // 调用控制器方法并设置响应
-        ctx.body = await instance[funcName](...args)
+            return null
+          })
+
+          // 调用控制器方法
+          const result = await instance[funcName](...args)
+
+          // 执行请求后置处理
+          const processedResult = await lifecycle.afterRequest(ctx, result, providers)
+
+          // 设置响应
+          ctx.body = processedResult
+        } catch (error: unknown) {
+          // 执行错误处理
+          const errorResponse = await lifecycle.handleError(ctx, error as Error, providers)
+          ctx.status = errorResponse.status
+          ctx.body = errorResponse
+        } finally {
+          // 执行请求完成处理
+          await lifecycle.onComplete(ctx, providers)
+        }
       })
     })
 }

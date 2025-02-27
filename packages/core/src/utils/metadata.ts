@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 /**
  * 获取元数据
  * @param key 元数据键

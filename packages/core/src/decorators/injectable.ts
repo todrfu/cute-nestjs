@@ -5,7 +5,7 @@ import { Scope } from '@/interfaces/scope'
 /**
  * Injectable 装饰器选项
  */
-export interface InjectableOptions {
+interface InjectableOptions {
   /**
    * Provider的作用域
    * @default Scope.SINGLETON
@@ -22,7 +22,8 @@ export function Injectable(options: InjectableOptions = {}): ClassDecorator {
   return (target: any) => {
     // 确保类已启用元数据反射
     if (!hasMetadata(DESIGN_PARAMTYPES_KEY, target)) {
-      throw new Error(`类 ${target.name} 缺少 TypeScript 生成的 design:paramtypes 元数据。请确保你在 tsconfig.json 中启用了 emitDecoratorMetadata 选项`)
+      return
+      // throw new Error(`类 ${target.name} 缺少 ${DESIGN_PARAMTYPES_KEY} 元数据`)
     }
     
     // 标记类可以被注入

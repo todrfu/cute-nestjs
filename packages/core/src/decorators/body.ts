@@ -1,5 +1,5 @@
-import { getMetadata, defineMetadata } from '../utils/metadata'
-import { BODY_DECORATOR_KEY, PARAM_FULLDATA_KEY } from '../utils/const'
+import { getMetadata, defineMetadata } from '@/utils/metadata'
+import { BODY_DECORATOR_KEY, PARAM_FULLDATA_KEY } from '@/utils/const'
 
 /**
  * 获取请求体中的数据

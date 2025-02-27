@@ -1,5 +1,4 @@
-import 'reflect-metadata'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import { DESIGN_PARAMTYPES_KEY, SCOPE_OPTIONS_KEY } from '@/utils/const'
 import { getMetadata } from '@/utils/metadata'
 import { Scope } from '@/interfaces/scope'
@@ -90,7 +89,7 @@ export class Container {
    * @returns 上下文ID
    */
   createContextId(): string {
-    return uuidv4()
+    return randomUUID()
   }
 
   /**

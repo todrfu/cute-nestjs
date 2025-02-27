@@ -1,6 +1,6 @@
 import { getMetadata } from './metadata'
-import { INJECT_DECORATOR_KEY } from '../utils/const'
-import type { Constructor } from '../interfaces/common'
+import { INJECT_DECORATOR_KEY } from '@/utils/const'
+import type { Constructor } from '@/interfaces/common'
 
 /**
  * 创建实例

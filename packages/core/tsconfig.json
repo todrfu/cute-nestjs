@@ -15,6 +15,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "preserveSymlinks": true,
+    "declarationDir": "./dist",
     "paths": {
       "@/*": ["./src/*"]
     }

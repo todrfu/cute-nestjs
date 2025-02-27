@@ -1,6 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
+import json from '@rollup/plugin-json';
 
 /** @type {import('rollup').RollupOptions} */
 export default {
@@ -25,9 +26,11 @@ export default {
       preferBuiltins: true,
       extensions: ['.ts', '.js', '.json']
     }),
+    json(),
     commonjs(),
     typescript({
       tsconfig: './tsconfig.json',
+      outputToFilesystem: true
     })
   ],
 };

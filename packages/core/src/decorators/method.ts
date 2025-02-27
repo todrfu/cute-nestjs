@@ -1,11 +1,11 @@
-import { getMetadata, defineMetadata } from '../utils/metadata'
+import { getMetadata, defineMetadata } from '@/utils/metadata'
 import {
   GET_DECORATOR_KEY,
   POST_DECORATOR_KEY,
   PUT_DECORATOR_KEY,
   DELETE_DECORATOR_KEY,
   PATCH_DECORATOR_KEY,
-} from '../utils/const'
+} from '@/utils/const'
 
 const decorator = (decoratorKey: string, method: string, path: string) => (target: any, propertyKey: string) => {
   const funcMetadata = getMetadata(decoratorKey, target) || []

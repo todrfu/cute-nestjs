@@ -1,5 +1,5 @@
-import { INJECT_DECORATOR_KEY, DESIGN_TYPE_KEY } from '../utils/const'
-import { getMetadata, defineMetadata } from '../utils/metadata'
+import { INJECT_DECORATOR_KEY, DESIGN_TYPE_KEY } from '@/utils/const'
+import { getMetadata, defineMetadata } from '@/utils/metadata'
 
 export const Inject = () => {
   return (target: any, propertyKey: string) => {

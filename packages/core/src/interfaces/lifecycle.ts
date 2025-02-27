@@ -1,53 +1,47 @@
 /**
- * 模块销毁生命周期接口
- * 
- * 实现此接口的Provider可以在模块销毁前执行清理工作
+ * 模块初始化时的生命周期钩子
+ * 在依赖注入完成后调用
  */
 export interface OnModuleInit {
+  /**
+   * 模块初始化钩子方法
+   * 在所有依赖注入完成后调用
+   */
   onModuleInit(): Promise<void> | void
 }
 
 /**
- * 模块销毁生命周期接口
- * 
- * 实现此接口的Provider可以在模块销毁前执行清理工作
+ * 应用程序启动完成时的生命周期钩子
+ * 在所有模块都初始化完成后调用
  */
-export interface OnModuleDestroy {
+export interface OnApplicationBootstrap {
   /**
-   * 在模块销毁前调用的钩子方法
-   * 
-   * 用于清理资源、关闭连接、取消订阅等操作
-   * @returns void 或 Promise<void>
+   * 应用程序启动完成钩子方法
+   * 在所有模块都初始化完成后调用
    */
-  onModuleDestroy(): Promise<void> | void
+  onApplicationBootstrap(): Promise<void> | void
 }
 
 /**
- * 应用关闭生命周期接口
- * 
- * 实现此接口的Provider可以在应用关闭前执行清理工作
+ * 应用程序准备关闭时的生命周期钩子
+ * 在收到终止信号时调用
  */
 export interface BeforeApplicationShutdown {
   /**
-   * 在应用关闭前调用的钩子方法
-   * 
-   * 用于执行清理工作，如关闭数据库连接、释放资源等
-   * @returns void 或 Promise<void>
+   * 应用程序准备关闭钩子方法
+   * 在收到终止信号时调用，可以用于清理资源
    */
   beforeApplicationShutdown(): Promise<void> | void
 }
 
 /**
- * 应用启动生命周期接口
- * 
- * 实现此接口的Provider可以在应用启动时执行初始化工作
+ * 模块销毁时的生命周期钩子
+ * 在模块被销毁前调用
  */
-export interface OnApplicationBootstrap {
+export interface OnModuleDestroy {
   /**
-   * 在应用启动时调用的钩子方法
-   * 
-   * 用于执行初始化工作，如数据库连接、缓存初始化等
-   * @returns void 或 Promise<void>
+   * 模块销毁钩子方法
+   * 在模块被销毁前调用，可以用于清理资源
    */
-  onApplicationBootstrap(): Promise<void> | void
+  onModuleDestroy(): Promise<void> | void
 } 
