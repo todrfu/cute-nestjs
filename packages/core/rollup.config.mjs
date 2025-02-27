@@ -30,10 +30,4 @@ export default {
       tsconfig: './tsconfig.json',
     })
   ],
-  external: [
-    'reflect-metadata',
-    'koa',
-    'koa-bodyparser',
-    'koa-router'
-  ]
 };
