@@ -1,5 +1,5 @@
-import { hasMetadata, defineMetadata } from '@/utils/metadata'
-import { DESIGN_PARAMTYPES_KEY, INJECTABLE_DECORATOR_KEY, SCOPE_OPTIONS_KEY } from '@/utils/const'
+import { defineMetadata } from '@/utils/metadata'
+import { INJECTABLE_DECORATOR_KEY, SCOPE_OPTIONS_KEY } from '@/utils/const'
 import { Scope } from '@/interfaces/scope'
 
 /**

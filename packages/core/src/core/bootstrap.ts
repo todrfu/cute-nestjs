@@ -1,5 +1,5 @@
-import { PatchRequestContextMiddleware } from '@/middleware/patch-request-context'
-import { createRoutes } from './createRoutes'
+import { PatchRequestContextMiddleware } from '@/middlewares/patch-request-context'
+import { createRoutes } from '@/core/create-routes'
 import type { HttpAdapter } from '@/interfaces/http-adapter'
 import type { BootstrapOptions } from '@/interfaces/bootstrap'
 

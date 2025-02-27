@@ -1,8 +1,8 @@
 import Router from 'koa-router'
 import { RequestLifecycle } from '@/core/request-lifecycle'
-import { getMetadata } from './metadata'
-import { createInstance } from './createInstance'
-import { createParamDecorator } from './createParamDecorator'
+import { getMetadata } from '../utils/metadata'
+import { createInstance } from '../utils/create-instance'
+import { createParamDecorator } from '../utils/create-param-decorator'
 import {
   PROVIDER_DECORATOR_KEY,
   CONTROLLER_DECORATOR_KEY,
@@ -16,7 +16,7 @@ import {
   BODY_DECORATOR_KEY,
   DESIGN_PARAMTYPES_KEY,
   REQUEST_CONTEXT_ID,
-} from './const'
+} from '../utils/const'
 
 import type { Context } from 'koa'
 import type { Constructor } from '@/interfaces/common'
@@ -88,12 +88,13 @@ export function createRoutes(
           // 获取方法参数类型
           const paramTypes = getMetadata(DESIGN_PARAMTYPES_KEY, cls.prototype, funcName) || []
 
-          // 获取各种参数装饰器的元数据
-          const paramDecorators = METHOD_DECORATORS.map(decorator =>
-            getMetadata(decorator, cls.prototype, funcName) || []
-          ).flat()
+          // 获取各种param装饰器的元数据
+          const paramDecorators = getMetadata(PARAM_DECORATOR_KEY, cls.prototype, funcName) || []
 
+          // 获取各种query装饰器的元数据
           const queryDecorators = getMetadata(QUERY_DECORATOR_KEY, cls.prototype, funcName) || []
+
+          // 获取各种body装饰器的元数据
           const bodyDecorators = getMetadata(BODY_DECORATOR_KEY, cls.prototype, funcName) || []
 
           // 处理方法参数

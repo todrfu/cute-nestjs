@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 
 // 导出工厂类
-export { CuteNestFactory } from '@/factory';
+export { CuteNestFactory } from '@/core/factory';
 
 // 导出装饰器
 export { Controller } from '@/decorators/controller'
@@ -51,7 +51,7 @@ export type {
   MiddlewareConsumer, 
   MiddlewareConfigProxy, 
   CuteNestModule 
-} from '@/interfaces/middleware-consumer'
+} from '@/interfaces/middleware'
 
 // 异常类
 export {

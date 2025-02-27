@@ -1,7 +1,7 @@
 import type { HttpAdapter } from '@/interfaces/http-adapter'
 import type { Constructor } from '@/interfaces/common'
 import type { Middleware } from '@/interfaces/middleware'
-import type { MiddlewareConsumer, MiddlewareConfigProxy } from '@/interfaces/middleware-consumer'
+import type { MiddlewareConsumer, MiddlewareConfigProxy } from '@/interfaces/middleware'
 
 /**
  * 中间件构建器
@@ -61,18 +61,19 @@ export class MiddlewareBuilder implements MiddlewareConsumer {
         const instance = typeof middleware === 'function'
           ? new middleware()
           : middleware
-
-        if ('resolve' in instance && typeof instance.resolve === 'function') {
-          const handler = instance.resolve()
+        // 判断是否则原型上存在use属性
+        if (Object.getPrototypeOf(instance).hasOwnProperty('use') && typeof instance.use === 'function') {
           // 创建一个新的中间件函数，它会检查请求路径是否被排除
           const wrappedHandler = async (ctx: any, next: () => Promise<void>) => {
             const requestPath = ctx.path
             if (exclude.some(pattern => this.matchPath(requestPath, pattern))) {
               return next()
             }
-            return handler(ctx, next)
+            return instance.use(ctx, next)
           }
           this.httpAdapter.use(wrappedHandler)
+        } else {
+          console.warn(`中间件 ${middleware} 没有 use 方法`)
         }
       }
     }

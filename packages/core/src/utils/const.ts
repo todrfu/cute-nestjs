@@ -95,6 +95,12 @@ export const INJECT_DECORATOR_KEY = 'decorator:inject'
 export const INJECTABLE_DECORATOR_KEY = 'decorator:injectable'
 
 /**
+ * 中间件装饰器键
+ * 用于标记一个类为中间件
+ */
+export const MIDDLEWARE_DECORATOR_KEY = 'decorator:middleware'
+
+/**
  * 作用域选项元数据键
  */
 export const SCOPE_OPTIONS_KEY = 'scope:options'
@@ -103,9 +109,3 @@ export const SCOPE_OPTIONS_KEY = 'scope:options'
  * 请求上下文 ID 键
  */
 export const REQUEST_CONTEXT_ID = 'request-context-id'
-
-/**
- * 中间件装饰器键
- * 用于标记一个类为中间件
- */
-export const MIDDLEWARE_DECORATOR_KEY = 'decorator:middleware'

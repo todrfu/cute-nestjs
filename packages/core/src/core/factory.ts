@@ -1,13 +1,12 @@
-import 'reflect-metadata'
 import { Container } from '@/core/container'
 import { ModuleRef } from '@/core/module-ref'
 import { MiddlewareBuilder } from '@/core/middleware-builder'
 import { KoaAdapter } from '@/adapters/koa-adapter'
-import { bootstrap } from '@/utils/bootstrap'
+import { bootstrap } from '@/core/bootstrap'
 import { hasMetadata, getMetadata } from '@/utils/metadata'
 import { INJECTABLE_DECORATOR_KEY, MODULE_METADATA_DECORATOR_KEY } from '@/utils/const'
 import type { Constructor } from '@/interfaces/common'
-import type { CuteNestModule } from '@/interfaces/middleware-consumer'
+import type { CuteNestModule } from '@/interfaces/middleware'
 import type { HttpAdapter, ApplicationOptions } from '@/interfaces/http-adapter'
 
 /**

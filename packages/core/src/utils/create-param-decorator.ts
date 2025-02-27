@@ -12,7 +12,7 @@ interface ParamDecoratorOptions {
 }
 
 export function createParamDecorator(type: 'query' | 'param' | 'body') {
-  return function resolveParam({ ctx, paramType, index, keys, contextId }: ParamDecoratorOptions) {
+  return function resolveParam({ ctx, paramType, index, keys }: ParamDecoratorOptions) {
     const typeName = paramType.name
     const key = keys[index]
 

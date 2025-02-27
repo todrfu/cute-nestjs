@@ -14,7 +14,7 @@ export class PatchRequestContextMiddleware implements Middleware {
    * 中间件处理函数
    */
   async use(ctx: any, next: () => Promise<void>) {
-    // 为每个请求创建唯一的上下文ID
+    // 创建上下文ID
     const contextId = randomUUID()
     ctx.state[REQUEST_CONTEXT_ID] = contextId
 
@@ -22,7 +22,7 @@ export class PatchRequestContextMiddleware implements Middleware {
       await next()
     } finally {
       // 清理上下文ID
-      delete ctx.state[REQUEST_CONTEXT_ID]
+      Reflect.deleteProperty(ctx.state, REQUEST_CONTEXT_ID)
     }
   }
 } 
