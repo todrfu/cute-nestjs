@@ -7,7 +7,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('/:id')
-  async getUser(@Param('id') id: string) {
+  async getUser(@Param('id') id: number) {
     const user = await this.userService.findById(id)
     if (!user) {
       throw new BadRequestException('用户不存在')

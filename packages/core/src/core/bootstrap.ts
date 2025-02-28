@@ -23,7 +23,13 @@ export async function bootstrap(
 
   // 注册控制器路由
   for (const controller of controllers) {
-    createRoutes(router, controller, container, providers)
+    createRoutes({
+      router,
+      controller,
+      container,
+      providers,
+      httpAdapter
+    })
   }
 
   // 应用路由中间件

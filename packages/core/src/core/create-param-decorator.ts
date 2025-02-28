@@ -1,20 +1,18 @@
 import { PARAM_FULLDATA_KEY } from '@/utils/const'
 import type { Context } from 'koa'
-import type { Constructor } from '@/interfaces/common'
+import type { ParamTypes, Constructor } from '@/interfaces/common'
 
 interface ParamDecoratorOptions {
   ctx: Context
   paramType: Constructor
-  index: number
-  keys: string[]
-  type: 'query' | 'param' | 'body'
+  paramName: string
   contextId?: string
 }
 
-export function createParamDecorator(type: 'query' | 'param' | 'body') {
-  return function resolveParam({ ctx, paramType, index, keys }: ParamDecoratorOptions) {
+export function createParamDecorator(type: ParamTypes) {
+  return function resolveParam({ ctx, paramType,  paramName }: ParamDecoratorOptions) {
     const typeName = paramType.name
-    const key = keys[index]
+    const key = paramName
 
     if (!key) return null
 
@@ -47,6 +45,10 @@ export function createParamDecorator(type: 'query' | 'param' | 'body') {
         }
         case 'param':
           value = ctx.params[key];
+          // 如果是字符串且目标类型是 Number，进行类型转换
+          if (typeof value === 'string' && typeName === 'Number') {
+            value = Number(value);
+          }
           break;
         case 'body':
           value = ctx.request.body[key];

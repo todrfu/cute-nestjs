@@ -8,9 +8,15 @@ import { QUERY_DECORATOR_KEY, PARAM_FULLDATA_KEY } from '@/utils/const'
  */
 export const Query = (name?: string) => {
   return (target: any, propertyKey: string, parameterIndex: number) => {
-    const queryMetadata = getMetadata(QUERY_DECORATOR_KEY, target, propertyKey) || []
-    // 如果name为空，则默认获取全量query参数
-    queryMetadata[parameterIndex] = name ?? PARAM_FULLDATA_KEY
-    defineMetadata(QUERY_DECORATOR_KEY, queryMetadata, target, propertyKey)
+    // 获取该方法入参
+    const funcParamsMetadata = getMetadata(QUERY_DECORATOR_KEY, target, propertyKey) || []
+
+    funcParamsMetadata[parameterIndex] = {
+      // 仅当name为undefined时默认获取全量body参数
+      name: name === void 0 ? PARAM_FULLDATA_KEY : name,
+      type: 'query',
+      parameterIndex,
+    }
+    defineMetadata(QUERY_DECORATOR_KEY, funcParamsMetadata, target, propertyKey)
   }
 }

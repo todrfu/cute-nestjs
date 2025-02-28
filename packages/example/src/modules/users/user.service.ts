@@ -6,7 +6,7 @@ import type { User } from './interfaces/user.interface'
 export class UserService {
   private users: User[] = [
     {
-      id: '1',
+      id: 1,
       username: 'drfu',
       email: 'drfu@cute-nestjs.com',
       password: '123456',
@@ -15,13 +15,13 @@ export class UserService {
     
   ]
 
-  async findById(id: string): Promise<User | undefined> {
+  async findById(id: number): Promise<User | undefined> {
     return this.users.find(user => user.id === id)
   }
 
   async create(data: CreateUserDto): Promise<User> {
     const user: User = {
-      id: String(this.users.length + 1),
+      id: this.users.length + 1,
       ...data,
       createdAt: new Date()
     }

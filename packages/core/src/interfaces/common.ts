@@ -12,3 +12,8 @@ export interface Constructor<T = any> {
    */
   new (...args: any[]): T
 }
+
+/**
+ * 控制器获取客户端入参的三种方式(@Query、@Param、@Body)
+ */
+export type ParamTypes = 'query' | 'param' | 'body'
