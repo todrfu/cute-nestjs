@@ -103,6 +103,7 @@ export function createRoutes(options: CreateRoutesOptions) {
               ctx,
               paramType: paramTypes[index],
               paramName: param.name,
+              httpAdapter
             })
           }
         )
