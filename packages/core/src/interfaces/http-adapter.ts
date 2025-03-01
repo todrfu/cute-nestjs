@@ -4,11 +4,16 @@ import type { Constructor } from './common'
  * HTTP适配器接口
  * 定义了通用的HTTP服务抽象，使框架可以支持不同的HTTP库
  */
-export interface HttpAdapter {
+export interface HttpAdapter<TContext> {
   /**
    * 获取服务器实例
    */
   getInstance(): any
+
+  /**
+   * 获取上下文
+   */
+  getContext(): Record<string, any>
 
   /**
    * 注册全局中间件
@@ -27,7 +32,7 @@ export interface HttpAdapter {
    * @param path 路由路径
    * @param handler 路由处理函数
    */
-  registerRoute(method: string, path: string, handler: any): void
+  registerRoute(method: string, path: string, handler: (ctx: TContext) => Promise<void>): void
 
   /**
    * 应用路由中间件
@@ -39,26 +44,26 @@ export interface HttpAdapter {
    * 获取请求参数
    * @param req 请求对象
    */
-  getRequestParams(req: any): any
+  getRequestParams(req: TContext): Record<string, string>
 
   /**
    * 获取查询参数
    * @param req 请求对象
    */
-  getRequestQuery(req: any): any
+  getRequestQuery(req: TContext): Record<string, string | string[]>
 
   /**
    * 获取请求体
    * @param req 请求对象
    */
-  getRequestBody(req: any): any
+  getRequestBody(req: TContext): unknown
 
   /**
    * 设置响应
    * @param res 响应对象
    * @param value 响应值
    */
-  setResponse(res: any, value: any): void
+  setResponse(res: TContext, value: unknown): void
 
   /**
    * 启动HTTP服务
@@ -71,19 +76,19 @@ export interface HttpAdapter {
 /**
  * HTTP适配器工厂接口
  */
-export interface HttpAdapterFactory {
+export interface HttpAdapterFactory<TContext = any> {
   /**
    * 创建HTTP适配器实例
    */
-  create(): HttpAdapter
+  create(): HttpAdapter<TContext>
 }
 
 /**
  * 应用选项接口
  */
-export interface ApplicationOptions {
+export interface ApplicationOptions<TContext = any> {
   /**
    * HTTP适配器类
    */
-  httpAdapter?: Constructor<HttpAdapter>
+  httpAdapter?: Constructor<HttpAdapter<TContext>>
 } 

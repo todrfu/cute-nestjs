@@ -1,4 +1,3 @@
-import Router from 'koa-router'
 import { RequestLifecycle } from '@/core/request-lifecycle'
 import { getMetadata } from '@/utils/metadata'
 import { createInstance } from '@/utils/create-instance'
@@ -18,7 +17,6 @@ import {
   REQUEST_CONTEXT_ID,
 } from '@/utils/const'
 
-import type { Context } from 'koa'
 import type { Constructor, ParamTypes } from '@/interfaces/common'
 import type { HttpAdapter } from '@/interfaces/http-adapter'
 
@@ -37,19 +35,19 @@ const METHOD_DECORATORS = [
 /**
  * 路由创建配置接口
  */
-interface CreateRoutesOptions {
-  router: Router
+interface CreateRoutesOptions<TContext = any> {
+  router: any
   controller: Constructor
   container: any
   providers: Constructor[]
-  httpAdapter: HttpAdapter
+  httpAdapter: HttpAdapter<TContext>
 }
 
 /**
  * 创建路由
  * 根据控制器的装饰器信息创建对应的路由处理函数
  */
-export function createRoutes(options: CreateRoutesOptions) {
+export function createRoutes<TContext>(options: CreateRoutesOptions<TContext>) {
   const { router, controller: cls, container, providers = [], httpAdapter } = options
 
   // 创建请求生命周期管理器
@@ -71,13 +69,13 @@ export function createRoutes(options: CreateRoutesOptions) {
     if (!fullPath) return
 
     // 创建路由处理函数
-    router[method](fullPath, async (ctx: Context) => {
+    router[method](fullPath, async (ctx: TContext) => {
       try {
         // 执行请求前置处理
         await lifecycle.beforeRequest(ctx, providers)
 
         // 在处理路由时获取上下文ID
-        const contextId = ctx.state[REQUEST_CONTEXT_ID]
+        const contextId = (ctx as any).state?.[REQUEST_CONTEXT_ID]
 
         // 创建控制器实例
         const instance = createInstance(cls, container, contextId)
@@ -99,7 +97,7 @@ export function createRoutes(options: CreateRoutesOptions) {
         // 处理方法参数
         const args = params.map(
           (param: { name: string; type: ParamTypes; paramType: string }, index: number) => {
-            return createParamDecorator(param.type)({
+            return createParamDecorator<TContext>(param.type)({
               ctx,
               paramType: paramTypes[index],
               paramName: param.name,

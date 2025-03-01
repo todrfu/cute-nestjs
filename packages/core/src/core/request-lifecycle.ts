@@ -16,7 +16,7 @@ import type {
  * - 错误处理
  * - 请求完成处理
  */
-export class RequestLifecycle {
+export class RequestLifecycle<TContext> {
   constructor(private readonly container: Container) {}
 
   /**
@@ -24,10 +24,10 @@ export class RequestLifecycle {
    * @param context 请求上下文
    * @param providers Provider列表
    */
-  async beforeRequest(context: any, providers: Constructor[]): Promise<void> {
+  async beforeRequest(context: TContext, providers: Constructor[]): Promise<void> {
     for (const provider of providers) {
       const instance = this.container.get(provider)
-      if (this.implementsInterface<BeforeRequest>(instance, 'beforeRequest')) {
+      if (this.implementsInterface<BeforeRequest<TContext>>(instance, 'beforeRequest')) {
         await instance.beforeRequest(context)
       }
     }
@@ -39,11 +39,11 @@ export class RequestLifecycle {
    * @param result 请求结果
    * @param providers Provider列表
    */
-  async afterRequest(context: any, result: any, providers: Constructor[]): Promise<any> {
+  async afterRequest(context: TContext, result: any, providers: Constructor[]): Promise<any> {
     let processedResult = result
     for (const provider of providers) {
       const instance = this.container.get(provider)
-      if (this.implementsInterface<AfterRequest>(instance, 'afterRequest')) {
+      if (this.implementsInterface<AfterRequest<TContext>>(instance, 'afterRequest')) {
         processedResult = await instance.afterRequest(context, processedResult)
       }
     }
@@ -56,14 +56,14 @@ export class RequestLifecycle {
    * @param error 错误对象
    * @param providers Provider列表
    */
-  async handleError(context: any, error: Error, providers: Constructor[]): Promise<{status: number} & Record<string, any>> {
+  async handleError(context: TContext, error: Error, providers: Constructor[]): Promise<{status: number} & Record<string, any>> {
     // 转换为 HTTP 异常
     const httpError = this.normalizeError(error)
 
     // 执行错误处理钩子
     for (const provider of providers) {
       const instance = this.container.get(provider)
-      if (this.implementsInterface<OnRequestError>(instance, 'onRequestError')) {
+      if (this.implementsInterface<OnRequestError<TContext>>(instance, 'onRequestError')) {
         try {
           const result = await instance.onRequestError(context, httpError)
           if (result !== undefined) {
@@ -84,10 +84,10 @@ export class RequestLifecycle {
    * @param context 请求上下文
    * @param providers Provider列表
    */
-  async onComplete(context: any, providers: Constructor[]): Promise<void> {
+  async onComplete(context: TContext, providers: Constructor[]): Promise<void> {
     for (const provider of providers) {
       const instance = this.container.get(provider)
-      if (this.implementsInterface<OnRequestComplete>(instance, 'onRequestComplete')) {
+      if (this.implementsInterface<OnRequestComplete<TContext>>(instance, 'onRequestComplete')) {
         try {
           await instance.onRequestComplete(context)
         } catch (err) {

@@ -6,14 +6,14 @@ import type { Middleware as KoaMiddleware, DefaultState, DefaultContext, Next } 
 import type { IRouterParamContext } from 'koa-router'
 import type { Middleware } from '@/interfaces/middleware'
 
-type KoaContext = Koa.ParameterizedContext<DefaultState, DefaultContext & IRouterParamContext>
+export type KoaContext = Koa.ParameterizedContext<DefaultState, DefaultContext & IRouterParamContext>
 type RouterHandler = (ctx: KoaContext) => Promise<void> | void
 
 /**
  * Koa HTTP适配器
  * 实现了通用的HTTP服务抽象，使用Koa作为底层服务
  */
-export class KoaAdapter implements HttpAdapter {
+export class KoaAdapter implements HttpAdapter<KoaContext> {
   private readonly app: Koa<DefaultState, DefaultContext>
 
   constructor() {
@@ -29,10 +29,14 @@ export class KoaAdapter implements HttpAdapter {
     return this.app
   }
 
+  getContext(): Record<string, any> {
+    return this.app.context
+  }
+
   /**
    * 注册全局中间件
    */
-  use(middleware: KoaMiddleware | Middleware): void {
+  use(middleware: KoaMiddleware | Middleware<KoaContext>): void {
     if (typeof middleware === 'function') {
       // 如果是普通函数中间件，直接使用
       this.app.use(middleware as KoaMiddleware)
@@ -54,9 +58,9 @@ export class KoaAdapter implements HttpAdapter {
   /**
    * 注册路由
    */
-  registerRoute(method: string, path: string, handler: RouterHandler): void {
+  registerRoute(method: string, path: string, handler: (ctx: KoaContext) => Promise<void>): void {
     const router = new Router<DefaultState, DefaultContext>()
-    router[method.toLowerCase()](path, handler)
+    router[method.toLowerCase()](path, handler as RouterHandler)
     this.app.use(router.routes())
   }
 

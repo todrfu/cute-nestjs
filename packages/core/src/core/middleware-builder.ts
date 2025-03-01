@@ -7,19 +7,19 @@ import type { MiddlewareConsumer, MiddlewareConfigProxy } from '@/interfaces/mid
  * 中间件构建器
  * 实现中间件的配置和应用
  */
-export class MiddlewareBuilder implements MiddlewareConsumer {
+export class MiddlewareBuilder<TContext> implements MiddlewareConsumer<TContext> {
   private readonly middlewareMap = new Map<
     string | Constructor,
-    { middleware: Constructor | Middleware; exclude: string[] }[]
+    { middleware: Constructor | Middleware<TContext>; exclude: string[] }[]
   >()
 
-  constructor(private readonly httpAdapter: HttpAdapter) {}
+  constructor(private readonly httpAdapter: HttpAdapter<TContext>) {}
 
   /**
    * 应用中间件
    */
-  apply(...middleware: (Constructor | Middleware)[]): MiddlewareConfigProxy {
-    const configProxy: MiddlewareConfigProxy = {
+  apply(...middleware: (Constructor | Middleware<TContext>)[]): MiddlewareConfigProxy<TContext> {
+    const configProxy: MiddlewareConfigProxy<TContext> = {
       forRoutes: (...routes: (string | Constructor)[]) => {
         routes.forEach(route => {
           if (!this.middlewareMap.has(route)) {

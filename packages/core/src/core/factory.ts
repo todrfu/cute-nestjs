@@ -3,6 +3,7 @@ import { ModuleRef } from '@/core/module-ref'
 import { MiddlewareBuilder } from '@/core/middleware-builder'
 import { KoaAdapter } from '@/adapters/koa-adapter'
 import { bootstrap } from '@/core/bootstrap'
+
 import { hasMetadata, getMetadata } from '@/utils/metadata'
 import { INJECTABLE_DECORATOR_KEY, MODULE_METADATA_DECORATOR_KEY } from '@/utils/const'
 import type { Constructor } from '@/interfaces/common'
@@ -27,10 +28,10 @@ export class CuteNestFactory {
    * @param options 应用选项
    * @returns HTTP适配器实例
    */
-  static async create(rootModule: Constructor, options: ApplicationOptions = {}): Promise<HttpAdapter> {
+  static async create<TContext>(rootModule: Constructor, options: ApplicationOptions<TContext> = {}): Promise<HttpAdapter<TContext>> {
     try {
       // 创建HTTP适配器
-      const httpAdapter = options.httpAdapter ? new options.httpAdapter() : new KoaAdapter()
+      const httpAdapter = (options.httpAdapter ? new options.httpAdapter() : new KoaAdapter()) as HttpAdapter<TContext>
       const container = new Container()
       this.container = container
       const moduleRef = new ModuleRef(container)
@@ -101,15 +102,15 @@ export class CuteNestFactory {
       await this.setupModuleMiddlewares(rootModule, httpAdapter, container)
 
       // 初始化应用
-      await bootstrap(httpAdapter, {
+      await bootstrap<TContext>(httpAdapter, {
         controllers,
         providers,
         container,
       })
 
       // 将模块引用添加到上下文中
-      const app = httpAdapter.getInstance()
-      app.context.moduleRef = moduleRef
+      const ctx = httpAdapter.getContext()
+      ctx.moduleRef = moduleRef
 
       // 调用应用程序启动钩子
       await this.callBootstrap(providers, container)
@@ -129,16 +130,16 @@ export class CuteNestFactory {
   /**
    * 设置模块中间件
    */
-  private static async setupModuleMiddlewares(
+  private static async setupModuleMiddlewares<TContext>(
     module: Constructor,
-    httpAdapter: HttpAdapter,
+    httpAdapter: HttpAdapter<TContext>,
     container: Container
   ): Promise<void> {
     const moduleInstance = await container.resolve(module)
 
     // 检查模块是否实现了 CuteNestModule 接口
     if (this.isCuteNestModule(moduleInstance)) {
-      const builder = new MiddlewareBuilder(httpAdapter)
+      const builder = new MiddlewareBuilder<TContext>(httpAdapter)
       await moduleInstance.configure(builder)
       await builder.build()
     }
@@ -155,7 +156,7 @@ export class CuteNestFactory {
   /**
    * 检查是否是 CuteNestModule
    */
-  private static isCuteNestModule(value: any): value is CuteNestModule {
+  private static isCuteNestModule(value: any): value is CuteNestModule<any> {
     return value && typeof value.configure === 'function'
   }
 

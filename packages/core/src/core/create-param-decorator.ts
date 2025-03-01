@@ -2,19 +2,19 @@ import { PARAM_FULLDATA_KEY } from '@/utils/const'
 import type { ParamTypes, Constructor } from '@/interfaces/common'
 import type { HttpAdapter } from '@/interfaces/http-adapter'
 
-interface ParamDecoratorOptions {
-  ctx: any
+interface ParamDecoratorOptions<TContext = any> {
+  ctx: TContext
   paramType: Constructor
   paramName: string
-  httpAdapter: HttpAdapter
+  httpAdapter: HttpAdapter<TContext>
 }
 
 /**
  * 创建参数装饰器处理函数
  * @param type 参数类型
  */
-export const createParamDecorator = (type: ParamTypes) => {
-  return ({ ctx, paramType, paramName, httpAdapter }: ParamDecoratorOptions) => {
+export const createParamDecorator = <TContext = any>(type: ParamTypes) => {
+  return ({ ctx, paramType, paramName, httpAdapter }: ParamDecoratorOptions<TContext>) => {
     let value: any
 
     switch (type) {

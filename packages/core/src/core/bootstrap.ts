@@ -1,4 +1,3 @@
-import { PatchRequestContextMiddleware } from '@/middlewares/patch-request-context'
 import { createRoutes } from '@/core/create-routes'
 import type { HttpAdapter } from '@/interfaces/http-adapter'
 import type { BootstrapOptions } from '@/interfaces/bootstrap'
@@ -8,22 +7,18 @@ import type { BootstrapOptions } from '@/interfaces/bootstrap'
  * @param httpAdapter HTTP适配器实例
  * @param options 初始化选项
  */
-export async function bootstrap(
-  httpAdapter: HttpAdapter,
+export async function bootstrap<TContext>(
+  httpAdapter: HttpAdapter<TContext>,
   options: BootstrapOptions
 ): Promise<void> {
   const { controllers, providers, container } = options
-
-  // 注册请求上下文中间件（必须在所有路由之前）
-  const patchRequestContext = new PatchRequestContextMiddleware()
-  httpAdapter.use(patchRequestContext)
 
   // 创建路由实例
   const router = httpAdapter.createRouter()
 
   // 注册控制器路由
   for (const controller of controllers) {
-    createRoutes({
+    createRoutes<TContext>({
       router,
       controller,
       container,
