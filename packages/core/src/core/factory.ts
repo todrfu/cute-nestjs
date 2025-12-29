@@ -131,11 +131,11 @@ export class CuteNestFactory {
    * 设置模块中间件
    */
   private static async setupModuleMiddlewares<TContext>(
-    module: Constructor,
+    moduleIns: Constructor,
     httpAdapter: HttpAdapter<TContext>,
     container: Container
   ): Promise<void> {
-    const moduleInstance = await container.resolve(module)
+    const moduleInstance = await container.resolve(moduleIns)
 
     // 检查模块是否实现了 CuteNestModule 接口
     if (this.isCuteNestModule(moduleInstance)) {
@@ -145,7 +145,7 @@ export class CuteNestFactory {
     }
 
     // 递归处理导入的模块
-    const metadata = getMetadata(MODULE_METADATA_DECORATOR_KEY, module) || {}
+    const metadata = getMetadata(MODULE_METADATA_DECORATOR_KEY, moduleIns) || {}
     const imports = metadata.imports || []
 
     for (const importedModule of imports) {

@@ -157,11 +157,11 @@ export class Container {
     // 解析构造函数参数
     const args = paramTypes.map((paramType: Constructor) => {
       // 处理循环依赖
-      const paramTokenName = this.getTokenName(paramType)
       const providerTokenName = this.getTokenName(provider)
+      const depParamTokenName = this.getTokenName(paramType)
       
       // 检查是否存在循环依赖
-      this.checkCircularDependency(providerTokenName, paramTokenName)
+      this.checkCircularDependency(providerTokenName, depParamTokenName)
       
       // 递归解析依赖
       return this.get(paramType)
